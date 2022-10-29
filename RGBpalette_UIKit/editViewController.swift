@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  editViewController.swift
 //  RGBpalette_UIKit
 //
 //  Created by Artem Sulzhenko on 09.10.2022.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController{
+class editViewController: UIViewController{
     
     @IBOutlet var rgbPalette: UIView!
     
@@ -22,11 +22,18 @@ class ViewController: UIViewController{
     @IBOutlet var redTextField: UITextField!
     @IBOutlet var greenTextField: UITextField!
     @IBOutlet var blueTextField: UITextField!
+    @IBOutlet var doneButton: UIButton!
+    
+    var delegate: ColorDelegate?
+    var colorMainVC: UIColor!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       
+        
         rgbPalette.layer.cornerRadius = 15
+        doneButton.layer.cornerRadius = 15
+        
+        rgbPalette.backgroundColor = colorMainVC
 
         setupSlider(slider: redSlider, color: .red)
         setupSlider(slider: greenSlider, color: .green)
@@ -36,10 +43,13 @@ class ViewController: UIViewController{
         setupKeyboard(textField: greenTextField)
         setupKeyboard(textField: blueTextField)
         
+        setValueForSlider()
         setValueForLabel()
         setValueForTextField()
         
         updatingValuesRGB()
+        
+        self.navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
     @IBAction func redSliderAction() {
@@ -60,11 +70,14 @@ class ViewController: UIViewController{
         updatingValuesRGB()
     }
     
-    private func updatingValuesRGB(){
-        rgbPalette.backgroundColor = UIColor(red: CGFloat(redSlider.value),
+    func updatingValuesRGB(){
+        let color = UIColor(red: CGFloat(redSlider.value),
                                              green: CGFloat(greenSlider.value),
                                              blue: CGFloat(blueSlider.value),
                                              alpha: CGFloat(1))
+        
+        rgbPalette.backgroundColor = color
+        delegate?.setColor(color)
     }
     
     private func setValueForLabel() {
@@ -79,13 +92,21 @@ class ViewController: UIViewController{
         blueTextField.text = string(from: blueSlider)
     }
     
+    private func setValueForSlider() {
+        let color = CIColor(color: colorMainVC)
+        
+        redSlider.value = Float(color.red)
+        greenSlider.value = Float(color.green)
+        blueSlider.value = Float(color.blue)
+    }
+    
     private func string(from slider: UISlider) -> String {
         return String(format: "%.2f", slider.value)
     }
     
 }
 
-extension ViewController: UITextFieldDelegate {
+extension editViewController: UITextFieldDelegate {
     
     private func setupSlider(slider: UISlider, color: UIColor?){
         slider.value = 0
@@ -129,7 +150,7 @@ extension ViewController: UITextFieldDelegate {
 }
 
 
-extension ViewController {
+extension editViewController {
     
     private func setupKeyboard(textField: UITextField){
         textField.delegate = self
@@ -158,4 +179,5 @@ extension ViewController {
         alert.addAction(okAction)
         present(alert, animated: true)
     }
+
 }

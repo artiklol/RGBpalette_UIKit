@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate {
+class ViewController: UIViewController{
     
     @IBOutlet var rgbPalette: UIView!
     
@@ -26,7 +26,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
        
-        setupRgbPalette()
+        rgbPalette.layer.cornerRadius = 15
 
         setupSlider(slider: redSlider, color: .red)
         setupSlider(slider: greenSlider, color: .green)
@@ -36,24 +36,56 @@ class ViewController: UIViewController, UITextFieldDelegate {
         setupKeyboard(textField: greenTextField)
         setupKeyboard(textField: blueTextField)
         
+        setValueForLabel()
+        setValueForTextField()
+        
         updatingValuesRGB()
     }
     
     @IBAction func redSliderAction() {
+        redLabel.text = string(from: redSlider)
+        redTextField.text = string(from: redSlider)
         updatingValuesRGB()
     }
     
     @IBAction func greenSliderAction() {
+        greenLabel.text = string(from: greenSlider)
+        greenTextField.text = string(from: greenSlider)
         updatingValuesRGB()
     }
     
     @IBAction func blueSliderAction() {
+        blueLabel.text = string(from: blueSlider)
+        blueTextField.text = string(from: blueSlider)
         updatingValuesRGB()
     }
     
-    private func setupRgbPalette(){
-        rgbPalette.layer.cornerRadius = 15
+    private func updatingValuesRGB(){
+        rgbPalette.backgroundColor = UIColor(red: CGFloat(redSlider.value),
+                                             green: CGFloat(greenSlider.value),
+                                             blue: CGFloat(blueSlider.value),
+                                             alpha: CGFloat(1))
     }
+    
+    private func setValueForLabel() {
+        redLabel.text = string(from: redSlider)
+        greenLabel.text = string(from: greenSlider)
+        blueLabel.text = string(from: blueSlider)
+    }
+    
+    private func setValueForTextField() {
+        redTextField.text = string(from: redSlider)
+        greenTextField.text = string(from: greenSlider)
+        blueTextField.text = string(from: blueSlider)
+    }
+    
+    private func string(from slider: UISlider) -> String {
+        return String(format: "%.2f", slider.value)
+    }
+    
+}
+
+extension ViewController: UITextFieldDelegate {
     
     private func setupSlider(slider: UISlider, color: UIColor?){
         slider.value = 0
@@ -64,26 +96,45 @@ class ViewController: UIViewController, UITextFieldDelegate {
         slider.thumbTintColor = .white
     }
     
-    private func updatingValuesRGB(){
-        redLabel.text = "Red:    " + String(format: "%.2f", redSlider.value)
-        greenLabel.text = "Green: " + String(format: "%.2f", greenSlider.value)
-        blueLabel.text = "Blue:    " + String(format: "%.2f", blueSlider.value)
-        
-        redTextField.text = String(format: "%.2f", redSlider.value)
-        greenTextField.text = String(format: "%.2f", greenSlider.value)
-        blueTextField.text = String(format: "%.2f", blueSlider.value)
-        
-        rgbPalette.backgroundColor = UIColor(red: CGFloat(redSlider.value),
-                                             green: CGFloat(greenSlider.value),
-                                             blue: CGFloat(blueSlider.value),
-                                             alpha: CGFloat(1))
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        view.endEditing(true)
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+        guard let text = textField.text else { return }
+        
+        if let currentValue = Float(text) {
+            switch textField.tag {
+            case 0: redSlider.value = currentValue
+            case 1: greenSlider.value = currentValue
+            case 2: blueSlider.value = currentValue
+            default: break
+            }
+        }else {
+            showAlert(title: "Wrong format!", message: "Please enter correct value")
+        }
+        
+        setValueForLabel()
+        setValueForTextField()
+        updatingValuesRGB()
+    }
+}
+
+
+extension ViewController {
     
     private func setupKeyboard(textField: UITextField){
         textField.delegate = self
         textField.keyboardType = .decimalPad
         
-        //add ToolBar and button "Done"
         let bar = UIToolbar()
         let done = UIBarButtonItem(title: "Done", style: .plain, target: self,
                                    action: #selector(donePressed))
@@ -95,30 +146,16 @@ class ViewController: UIViewController, UITextFieldDelegate {
         textField.inputAccessoryView = bar
     }
     
-    private func inputValuesKeyboard(textField: UITextField, slider: UISlider){
-        guard let text = textField.text else { return }
-        
-        if let currentValue = Float(text) {
-            slider.value = currentValue
-        }
-    }
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        inputValuesKeyboard(textField: redTextField, slider: redSlider)
-        inputValuesKeyboard(textField: greenTextField, slider: greenSlider)
-        inputValuesKeyboard(textField: blueTextField, slider: blueSlider)
-        
-        updatingValuesRGB()
+    @objc private func donePressed() {
         view.endEditing(true)
     }
     
-    @objc func donePressed(){
-        inputValuesKeyboard(textField: redTextField, slider: redSlider)
-        inputValuesKeyboard(textField: greenTextField, slider: greenSlider)
-        inputValuesKeyboard(textField: blueTextField, slider: blueSlider)
-        
-        updatingValuesRGB()
-        view.endEditing(true)
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title,
+                                      message: message,
+                                      preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alert.addAction(okAction)
+        present(alert, animated: true)
     }
-    
 }
